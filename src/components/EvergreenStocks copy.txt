@@ -1,0 +1,387 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { Search, RefreshCw, User, Eye, ArrowUp, ArrowDown } from 'lucide-react';
+
+const EvergreenStocks = () => {
+  const [stocks, setStocks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: 'ticker', direction: 'ascending' });
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    // Simulate loading data
+    setLoading(true);
+    setTimeout(() => {
+      setStocks([
+        {
+          id: 1,
+          ticker: 'AAPL',
+          name: 'Apple Inc.',
+          sector: 'Technology',
+          price: '$175.46',
+          change: '+1.48%',
+          marketCap: '$2.74T',
+          peRatio: '29.15',
+          divYield: '0.48%',
+          avgVolume: '56.8M',
+          recommendation: 'Strong Buy'
+        },
+        {
+          id: 2,
+          ticker: 'MSFT',
+          name: 'Microsoft Corporation',
+          sector: 'Technology',
+          price: '$415.32',
+          change: '+0.56%',
+          marketCap: '$3.09T',
+          peRatio: '35.42',
+          divYield: '0.71%',
+          avgVolume: '26.3M',
+          recommendation: 'Buy'
+        },
+        {
+          id: 3,
+          ticker: 'JNJ',
+          name: 'Johnson & Johnson',
+          sector: 'Healthcare',
+          price: '$154.78',
+          change: '-0.23%',
+          marketCap: '$372.1B',
+          peRatio: '24.68',
+          divYield: '3.15%',
+          avgVolume: '7.2M',
+          recommendation: 'Hold'
+        },
+        {
+          id: 4,
+          ticker: 'PG',
+          name: 'Procter & Gamble Co.',
+          sector: 'Consumer Defensive',
+          price: '$162.45',
+          change: '+0.85%',
+          marketCap: '$382.9B',
+          peRatio: '27.10',
+          divYield: '2.38%',
+          avgVolume: '6.5M',
+          recommendation: 'Buy'
+        },
+        {
+          id: 5,
+          ticker: 'KO',
+          name: 'The Coca-Cola Company',
+          sector: 'Consumer Defensive',
+          price: '$60.23',
+          change: '+0.32%',
+          marketCap: '$260.3B',
+          peRatio: '24.18',
+          divYield: '2.92%',
+          avgVolume: '13.4M',
+          recommendation: 'Buy'
+        },
+        {
+          id: 6,
+          ticker: 'JPM',
+          name: 'JPMorgan Chase & Co.',
+          sector: 'Financial Services',
+          price: '$195.46',
+          change: '+1.24%',
+          marketCap: '$564.2B',
+          peRatio: '13.24',
+          divYield: '2.25%',
+          avgVolume: '9.1M',
+          recommendation: 'Strong Buy'
+        },
+        {
+          id: 7,
+          ticker: 'HD',
+          name: 'The Home Depot, Inc.',
+          sector: 'Consumer Cyclical',
+          price: '$362.78',
+          change: '-0.45%',
+          marketCap: '$362.5B',
+          peRatio: '24.17',
+          divYield: '2.46%',
+          avgVolume: '3.7M',
+          recommendation: 'Hold'
+        }
+      ]);
+      setLoading(false);
+    }, 1500);
+  }, []);
+
+  const handleProfileClick = () => {
+    setIsProfileOpen(!isProfileOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    // Redirect logic would go here
+  };
+
+  const sortedStocks = React.useMemo(() => {
+    const sortableStocks = [...stocks];
+    if (sortConfig.key) {
+      sortableStocks.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+        
+        // Handle percentage and currency strings
+        if (typeof aValue === 'string' && aValue.includes('%')) {
+          aValue = parseFloat(aValue.replace('%', '').replace('+', ''));
+          bValue = parseFloat(bValue.replace('%', '').replace('+', ''));
+        } else if (typeof aValue === 'string' && aValue.includes('$')) {
+          aValue = parseFloat(aValue.replace('$', '').replace('T', '000').replace('B', ''));
+          bValue = parseFloat(bValue.replace('$', '').replace('T', '000').replace('B', ''));
+        }
+        
+        if (aValue < bValue) {
+          return sortConfig.direction === 'ascending' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'ascending' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableStocks;
+  }, [stocks, sortConfig]);
+
+  const requestSort = (key) => {
+    let direction = 'ascending';
+    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnName) => {
+    if (sortConfig.key !== columnName) {
+      return null;
+    }
+    return sortConfig.direction === 'ascending' ? 
+      <ArrowUp className="w-4 h-4 inline ml-1" /> : 
+      <ArrowDown className="w-4 h-4 inline ml-1" />;
+  };
+
+  const filteredStocks = sortedStocks.filter(stock => 
+    stock.ticker.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    stock.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const getChangeColor = (change) => {
+    if (change.startsWith('+')) return 'text-green-500';
+    if (change.startsWith('-')) return 'text-red-500';
+    return 'text-gray-800';
+  };
+
+  const getRecommendationColor = (rec) => {
+    switch(rec) {
+      case 'Strong Buy': return 'bg-green-600 text-white';
+      case 'Buy': return 'bg-green-400 text-white';
+      case 'Hold': return 'bg-yellow-400 text-gray-800';
+      case 'Sell': return 'bg-red-400 text-white';
+      case 'Strong Sell': return 'bg-red-600 text-white';
+      default: return 'bg-gray-300 text-gray-800';
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        <header className="bg-white rounded-lg shadow-lg p-4 mb-6">
+          <div className="flex justify-between items-center">
+            {/* Logo */}
+            <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center">
+              Logo
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex gap-6">
+              <Link to="/daytrading" className="text-gray-600 hover:text-blue-600">
+                Day Trading
+              </Link>
+              <Link to="/swingtrading" className="text-gray-600 hover:text-blue-600">
+                Swing Trading
+              </Link>
+              <Link to="/evergreen" className="text-blue-600 font-semibold">
+                Evergreen Stocks
+              </Link>
+            </nav>
+
+            {/* Profile Section */}
+            <div className="relative" onClick={handleProfileClick}>
+              <User className="w-6 h-6 text-gray-600 cursor-pointer" />
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
+                  <div className="px-4 py-2 text-sm text-gray-800 border-b">
+                    Profile Name
+                  </div>
+                  <Link to="/edit-profile" className="flex items-center px-4 py-2 hover:bg-gray-100">
+                    <span>-Edit Profile</span>
+                  </Link>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.username}
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.email}
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    Change Password
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.subscription?.type === 'pro' ? 'Active' : 'Inactive'} Subscription
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-left hover:bg-gray-100 text-red-600"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Evergreen Stocks Dashboard</h1>
+            <button
+              onClick={() => {
+                setLoading(true);
+                setTimeout(() => setLoading(false), 1000);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by ticker or company name..."
+                className="pl-10 w-full p-2 border rounded-lg"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h2 className="text-xl font-semibold mb-4">🌳 Long-Term Investment Opportunities</h2>
+                <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+                  <thead className="bg-green-600 text-white">
+                    <tr>
+                      <th className="py-3 px-4 text-left cursor-pointer" onClick={() => requestSort('ticker')}>
+                        Ticker {getSortIcon('ticker')}
+                      </th>
+                      <th className="py-3 px-4 text-left cursor-pointer" onClick={() => requestSort('name')}>
+                        Company {getSortIcon('name')}
+                      </th>
+                      <th className="py-3 px-4 text-left cursor-pointer" onClick={() => requestSort('sector')}>
+                        Sector {getSortIcon('sector')}
+                      </th>
+                      <th className="py-3 px-4 text-right cursor-pointer" onClick={() => requestSort('price')}>
+                        Price {getSortIcon('price')}
+                      </th>
+                      <th className="py-3 px-4 text-right cursor-pointer" onClick={() => requestSort('change')}>
+                        Change {getSortIcon('change')}
+                      </th>
+                      <th className="py-3 px-4 text-right cursor-pointer" onClick={() => requestSort('marketCap')}>
+                        Market Cap {getSortIcon('marketCap')}
+                      </th>
+                      <th className="py-3 px-4 text-right cursor-pointer" onClick={() => requestSort('peRatio')}>
+                        P/E Ratio {getSortIcon('peRatio')}
+                      </th>
+                      <th className="py-3 px-4 text-right cursor-pointer" onClick={() => requestSort('divYield')}>
+                        Div Yield {getSortIcon('divYield')}
+                      </th>
+                      <th className="py-3 px-4 text-right cursor-pointer" onClick={() => requestSort('avgVolume')}>
+                        Avg Volume {getSortIcon('avgVolume')}
+                      </th>
+                      <th className="py-3 px-4 text-center cursor-pointer" onClick={() => requestSort('recommendation')}>
+                        Recommendation {getSortIcon('recommendation')}
+                      </th>
+                      <th className="py-3 px-4 text-center">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredStocks.map(stock => (
+                      <tr key={stock.id} className="hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{stock.ticker}</td>
+                        <td className="py-3 px-4">{stock.name}</td>
+                        <td className="py-3 px-4">{stock.sector}</td>
+                        <td className="py-3 px-4 text-right">{stock.price}</td>
+                        <td className={`py-3 px-4 text-right ${getChangeColor(stock.change)}`}>
+                          {stock.change}
+                        </td>
+                        <td className="py-3 px-4 text-right">{stock.marketCap}</td>
+                        <td className="py-3 px-4 text-right">{stock.peRatio}</td>
+                        <td className="py-3 px-4 text-right">{stock.divYield}</td>
+                        <td className="py-3 px-4 text-right">{stock.avgVolume}</td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRecommendationColor(stock.recommendation)}`}>
+                            {stock.recommendation}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <button className="p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200">
+                            <Eye className="w-5 h-5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+          
+          {/* Stock details section */}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-4 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-3">Sector Distribution</h3>
+              <div className="h-64 flex items-center justify-center border rounded-lg bg-white">
+                {/* Placeholder for a chart */}
+                <p className="text-gray-500">Sector Distribution Chart</p>
+              </div>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg shadow">
+              <h3 className="text-lg font-semibold mb-3">Dividend Yield Comparison</h3>
+              <div className="h-64 flex items-center justify-center border rounded-lg bg-white">
+                {/* Placeholder for a chart */}
+                <p className="text-gray-500">Dividend Yield Chart</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Investment Tips */}
+          <div className="mt-8 bg-blue-50 p-6 rounded-lg border border-blue-200">
+            <h3 className="text-lg font-semibold text-blue-800 mb-3">Investment Tips</h3>
+            <ul className="space-y-2 text-blue-700">
+              <li>• Evergreen stocks are known for their stability, consistent performance, and ability to weather economic downturns.</li>
+              <li>• Consider focusing on companies with strong competitive advantages, healthy balance sheets, and consistent dividend growth.</li>
+              <li>• Diversify across multiple sectors to reduce risk exposure.</li>
+              <li>• Remember that even the most stable stocks should be monitored regularly for fundamental changes.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EvergreenStocks;

@@ -1,0 +1,256 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { Search, RefreshCw, User } from 'lucide-react';
+
+const DayTrading = () => {
+  const [trades, setTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    // Simulate loading data
+    setLoading(true);
+    setTimeout(() => {
+      setTrades([
+        {
+          id: 1,
+          ticker: 'TSLA',
+          strikePrice: '$300',
+          type: 'Call',
+          expiry: '3/15',
+          qty: 1,
+          amount: '$12.00',
+          executed: '10:00 AM',
+          closing: '3:45 PM',
+          livePL: '$13.25',
+          returnPercentage: '+10.42%',
+          result: 'Profit'
+        },
+        {
+          id: 2,
+          ticker: 'AAPL',
+          strikePrice: '$180',
+          type: 'Put',
+          expiry: '3/14',
+          qty: 2,
+          amount: '$8.50',
+          executed: '9:45 AM',
+          closing: '--',
+          livePL: '$9.15',
+          returnPercentage: '+7.65%',
+          result: '--'
+        },
+        {
+          id: 3,
+          ticker: 'NVDA',
+          strikePrice: '$950',
+          type: 'Call',
+          expiry: '3/15',
+          qty: 1,
+          amount: '$24.30',
+          executed: '11:15 AM',
+          closing: '--',
+          livePL: '$23.75',
+          returnPercentage: '-2.26%',
+          result: '--'
+        },
+        {
+          id: 4,
+          ticker: 'AMD',
+          strikePrice: '$165',
+          type: 'Call',
+          expiry: '3/14',
+          qty: 3,
+          amount: '$6.40',
+          executed: '10:30 AM',
+          closing: '--',
+          livePL: '$7.20',
+          returnPercentage: '+12.50%',
+          result: '--'
+        },
+        {
+          id: 5,
+          ticker: 'META',
+          strikePrice: '$490',
+          type: 'Put',
+          expiry: '3/15',
+          qty: 1,
+          amount: '$14.20',
+          executed: '9:35 AM',
+          closing: '2:15 PM',
+          livePL: '$13.40',
+          returnPercentage: '-5.63%',
+          result: 'Loss'
+        }
+      ]);
+      setLoading(false);
+    }, 1500);
+  }, []);
+
+  const handleProfileClick = () => {
+    setIsProfileOpen(!isProfileOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    // Redirect logic would go here
+  };
+
+  const filteredTrades = trades.filter(trade => 
+    trade.ticker.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Function to determine the styling for P/L and return values
+  const getProfitLossColor = (value) => {
+    if (value.startsWith('+')) return 'text-green-500';
+    if (value.startsWith('-')) return 'text-red-500';
+    return '';
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        <header className="bg-white rounded-lg shadow-lg p-4 mb-6">
+          <div className="flex justify-between items-center">
+            {/* Logo */}
+            <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center">
+              Logo
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex gap-6">
+              <Link to="/daytrading" className="text-blue-600 font-semibold">
+                Day Trading
+              </Link>
+              <Link to="/swingtrading" className="text-gray-600 hover:text-blue-600">
+                Swing Trading
+              </Link>
+              <Link to="/evergreen" className="text-gray-600 hover:text-blue-600">
+                Evergreen Stocks
+              </Link>
+            </nav>
+
+            {/* Profile Section */}
+            <div className="relative" onClick={handleProfileClick}>
+              <User className="w-6 h-6 text-gray-600 cursor-pointer" />
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
+                  <div className="px-4 py-2 text-sm text-gray-800 border-b">
+                    Profile Name
+                  </div>
+                  <Link to="/edit-profile" className="flex items-center px-4 py-2 hover:bg-gray-100">
+                    <span>-Edit Profile</span>
+                  </Link>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.username}
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.email}
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    Change Password
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.subscription?.type === 'pro' ? 'Active' : 'Inactive'} Subscription
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-left hover:bg-gray-100 text-red-600"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Day Trading Dashboard</h1>
+            <button
+              onClick={() => {
+                setLoading(true);
+                setTimeout(() => setLoading(false), 1000);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by ticker..."
+                className="pl-10 w-full p-2 border rounded-lg"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h2 className="text-xl font-semibold mb-4">🚀 Live Trade Alerts</h2>
+                <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+                  <thead className="bg-orange-400 text-white">
+                    <tr>
+                      <th className="py-3 px-4 text-left">Ticker</th>
+                      <th className="py-3 px-4 text-left">Strike Price</th>
+                      <th className="py-3 px-4 text-left">Type</th>
+                      <th className="py-3 px-4 text-left">Expiry</th>
+                      <th className="py-3 px-4 text-center">Qty</th>
+                      <th className="py-3 px-4 text-right">Amount</th>
+                      <th className="py-3 px-4 text-center">Executed</th>
+                      <th className="py-3 px-4 text-center">Closing</th>
+                      <th className="py-3 px-4 text-right">Live P/L</th>
+                      <th className="py-3 px-4 text-right">Return (%)</th>
+                      <th className="py-3 px-4 text-center">Result</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredTrades.map(trade => (
+                      <tr key={trade.id} className="hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{trade.ticker}</td>
+                        <td className="py-3 px-4">{trade.strikePrice}</td>
+                        <td className="py-3 px-4">{trade.type}</td>
+                        <td className="py-3 px-4">{trade.expiry}</td>
+                        <td className="py-3 px-4 text-center">{trade.qty}</td>
+                        <td className="py-3 px-4 text-right">{trade.amount}</td>
+                        <td className="py-3 px-4 text-center">{trade.executed}</td>
+                        <td className="py-3 px-4 text-center">{trade.closing}</td>
+                        <td className={`py-3 px-4 text-right font-semibold ${trade.livePL.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+                          {trade.livePL}
+                        </td>
+                        <td className={`py-3 px-4 text-right ${getProfitLossColor(trade.returnPercentage)}`}>
+                          {trade.returnPercentage}
+                        </td>
+                        <td className={`py-3 px-4 text-center font-semibold ${trade.result === 'Profit' ? 'text-green-500' : trade.result === 'Loss' ? 'text-red-500' : ''}`}>
+                          {trade.result}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DayTrading;

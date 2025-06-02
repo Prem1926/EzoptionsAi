@@ -1,0 +1,279 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { Link } from 'react-router-dom';
+import { Search, RefreshCw, User, Filter } from 'lucide-react';
+
+const SwingTrading = () => {
+  const [trades, setTrades] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [filter, setFilter] = useState('ALL');
+  const { user, logout } = useAuth();
+
+  useEffect(() => {
+    // Simulate loading data
+    setLoading(true);
+    setTimeout(() => {
+      setTrades([
+        {
+          id: 1,
+          ticker: 'AAPL',
+          strikePrice: '$175',
+          type: 'Call',
+          expiry: '4/19',
+          qty: 2,
+          amount: '$15.40',
+          executed: '03/05',
+          closing: '--',
+          livePL: '$16.80',
+          returnPercentage: '+9.09%',
+          result: '--',
+          status: 'ACTIVE'
+        },
+        {
+          id: 2,
+          ticker: 'MSFT',
+          strikePrice: '$410',
+          type: 'Call',
+          expiry: '4/26',
+          qty: 1,
+          amount: '$22.60',
+          executed: '03/01',
+          closing: '--',
+          livePL: '$24.75',
+          returnPercentage: '+9.51%',
+          result: '--',
+          status: 'ACTIVE'
+        },
+        {
+          id: 3,
+          ticker: 'AMZN',
+          strikePrice: '$180',
+          type: 'Put',
+          expiry: '4/12',
+          qty: 3,
+          amount: '$12.80',
+          executed: '02/28',
+          closing: '03/07',
+          livePL: '$14.10',
+          returnPercentage: '+10.16%',
+          result: 'Profit',
+          status: 'CLOSED'
+        },
+        {
+          id: 4,
+          ticker: 'GOOG',
+          strikePrice: '$150',
+          type: 'Call',
+          expiry: '4/26',
+          qty: 4,
+          amount: '$7.20',
+          executed: '03/04',
+          closing: '--',
+          livePL: '$6.85',
+          returnPercentage: '-4.86%',
+          result: '--',
+          status: 'ACTIVE'
+        },
+        {
+          id: 5,
+          ticker: 'META',
+          strikePrice: '$480',
+          type: 'Call',
+          expiry: '4/05',
+          qty: 2,
+          amount: '$19.50',
+          executed: '02/25',
+          closing: '03/04',
+          livePL: '$17.80',
+          returnPercentage: '-8.72%',
+          result: 'Loss',
+          status: 'CLOSED'
+        }
+      ]);
+      setLoading(false);
+    }, 1500);
+  }, []);
+
+  const handleProfileClick = () => {
+    setIsProfileOpen(!isProfileOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    // Redirect logic would go here
+  };
+
+  const filteredTrades = trades.filter(trade => {
+    const matchesSearch = trade.ticker.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filter === 'ALL' || filter === trade.status;
+    return matchesSearch && matchesFilter;
+  });
+
+  // Function to determine the styling for P/L and return values
+  const getProfitLossColor = (value) => {
+    if (value.startsWith('+')) return 'text-green-500';
+    if (value.startsWith('-')) return 'text-red-500';
+    return '';
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 p-4">
+      <div className="max-w-7xl mx-auto">
+        <header className="bg-white rounded-lg shadow-lg p-4 mb-6">
+          <div className="flex justify-between items-center">
+            {/* Logo */}
+            <div className="w-12 h-12 border-2 border-gray-300 rounded-lg flex items-center justify-center">
+              Logo
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex gap-6">
+              <Link to="/daytrading" className="text-gray-600 hover:text-blue-600">
+                Day Trading
+              </Link>
+              <Link to="/swingtrading" className="text-blue-600 font-semibold">
+                Swing Trading
+              </Link>
+              <Link to="/evergreen" className="text-gray-600 hover:text-blue-600">
+                Evergreen Stocks
+              </Link>
+            </nav>
+
+            {/* Profile Section */}
+            <div className="relative" onClick={handleProfileClick}>
+              <User className="w-6 h-6 text-gray-600 cursor-pointer" />
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-10">
+                  <div className="px-4 py-2 text-sm text-gray-800 border-b">
+                    Profile Name
+                  </div>
+                  <Link to="/edit-profile" className="flex items-center px-4 py-2 hover:bg-gray-100">
+                    <span>-Edit Profile</span>
+                  </Link>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.username}
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.email}
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    Change Password
+                  </div>
+                  <div className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100">
+                    {user?.subscription?.type === 'pro' ? 'Active' : 'Inactive'} Subscription
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-2 text-left hover:bg-gray-100 text-red-600"
+                  >
+                    Log Out
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-2xl font-bold text-gray-800">Swing Trading Dashboard</h1>
+            <button
+              onClick={() => {
+                setLoading(true);
+                setTimeout(() => setLoading(false), 1000);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Refresh
+            </button>
+          </div>
+
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search by ticker..."
+                className="pl-10 w-full p-2 border rounded-lg"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <select
+              className="p-2 border rounded-lg bg-white"
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option value="ALL">All Trades</option>
+              <option value="ACTIVE">Active</option>
+              <option value="CLOSED">Closed</option>
+            </select>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-600 border-t-transparent"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h2 className="text-xl font-semibold mb-4">📈 Swing Trade Positions</h2>
+                <table className="min-w-full bg-white rounded-lg overflow-hidden shadow">
+                  <thead className="bg-purple-600 text-white">
+                    <tr>
+                      <th className="py-3 px-4 text-left">Ticker</th>
+                      <th className="py-3 px-4 text-left">Strike Price</th>
+                      <th className="py-3 px-4 text-left">Type</th>
+                      <th className="py-3 px-4 text-left">Expiry</th>
+                      <th className="py-3 px-4 text-center">Qty</th>
+                      <th className="py-3 px-4 text-right">Amount</th>
+                      <th className="py-3 px-4 text-center">Entry Date</th>
+                      <th className="py-3 px-4 text-center">Exit Date</th>
+                      <th className="py-3 px-4 text-right">Current Value</th>
+                      <th className="py-3 px-4 text-right">Return (%)</th>
+                      <th className="py-3 px-4 text-center">Status</th>
+                      <th className="py-3 px-4 text-center">Result</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredTrades.map(trade => (
+                      <tr key={trade.id} className="hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{trade.ticker}</td>
+                        <td className="py-3 px-4">{trade.strikePrice}</td>
+                        <td className="py-3 px-4">{trade.type}</td>
+                        <td className="py-3 px-4">{trade.expiry}</td>
+                        <td className="py-3 px-4 text-center">{trade.qty}</td>
+                        <td className="py-3 px-4 text-right">{trade.amount}</td>
+                        <td className="py-3 px-4 text-center">{trade.executed}</td>
+                        <td className="py-3 px-4 text-center">{trade.closing}</td>
+                        <td className={`py-3 px-4 text-right font-semibold ${trade.livePL.startsWith('-') ? 'text-red-500' : 'text-green-500'}`}>
+                          {trade.livePL}
+                        </td>
+                        <td className={`py-3 px-4 text-right ${getProfitLossColor(trade.returnPercentage)}`}>
+                          {trade.returnPercentage}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${trade.status === 'ACTIVE' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
+                            {trade.status}
+                          </span>
+                        </td>
+                        <td className={`py-3 px-4 text-center font-semibold ${trade.result === 'Profit' ? 'text-green-500' : trade.result === 'Loss' ? 'text-red-500' : ''}`}>
+                          {trade.result}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SwingTrading;
