@@ -1,1 +1,1 @@
-#EzOptionsAi Stock Trading App
+## EzOptionsAi Stock Trading App
